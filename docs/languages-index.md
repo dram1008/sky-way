@@ -202,18 +202,26 @@ class TranslatedActiveRecord extends ActiveRecord
         return parent::__get($name);
     }
 
+    /**
+     * Возвращает поле в языке который установлен в приложении
+     * Если оно Текущий язык в системе является языком в который принят по умолчанияю то возвращается значение поля $name
+     * иначе оно выбирается из поля `<$name>_translation`
+     *
+     * @param $name
+     * @return mixed
+     */
     public function __getTranslated($name)
     {
         if (Language::isDefault()) {
-            return $this->$name;
+            return parent::__get($name);
         } else {
             $fieldNameTranslation = $name . '_translation';
-            $value = $this->$fieldNameTranslation;
+            $value = parent::__get($fieldNameTranslation);
             if (is_null($value)) {
-                return $this->$name;
+                return parent::__get($name);
             } else {
                 if ($value == '') {
-                    return $this->$name;
+                    return parent::__get($name);
                 } else {
                     $data = json_decode($value);
                     foreach ($data as $row) {
@@ -221,7 +229,7 @@ class TranslatedActiveRecord extends ActiveRecord
                             return $row[1];
                         }
                     }
-                    return $this->$name;
+                    return parent::__get($name);
                 }
             }
         }
@@ -278,6 +286,7 @@ class TranslatedActiveRecord extends ActiveRecord
         }
     }
 }
+
 class Language extends Object
 {
     /**
