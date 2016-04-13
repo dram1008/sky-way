@@ -14,9 +14,9 @@
 
 ### Таблица `languages`
 
-id - int - autoincrement
-name - string - Название языка
-code - varchar(16)
+- id - int - autoincrement
+- name - string - Название языка
+- code - varchar(16)
 ...
 
 Которая содержит еще и таблицу с переводами языков `languages_translation` (см. Перевод списков)
