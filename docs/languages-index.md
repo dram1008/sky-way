@@ -286,8 +286,18 @@ class TranslatedActiveRecord extends ActiveRecord
         }
     }
 }
-
-class Language extends Object
+/**
+ * Содержит информацию о языке
+ *
+ * @property int id
+ * @property string name
+ * @property string code
+ *
+ *
+ * Class Language
+ * @package app\services
+ */
+class Language extends ActiveRecord
 {
     /**
      * Возвращает язык пользователя в зависимости от настроек пользователя
@@ -300,13 +310,34 @@ class Language extends Object
     }
 
     /**
-     * Преобразовывает languages.id в Yii::$app->language
+     * Преобразовывает languages.id в Yii::$app-> (Вызывает исключение)
      *
      * @return string
+     *
+     * @throws \Exception
      */
     public static function convertLanguageIdToAppLanguage($lid)
     {
-        return 'ru';
+        $v = self::_convertLanguageIdToAppLanguage($lid);
+        if (is_null($v)) {
+            throw new \Exception('Указан язык которого нет в системе');
+        }
+
+        return $v;
+    }
+
+    /**
+     * Преобразовывает languages.id в Yii::$app->language
+     *
+     * @return string | null
+     */
+    public static function _convertLanguageIdToAppLanguage($lid)
+    {
+        if ($language = self::findOne($lid)) {
+            return $language->code;
+        } else {
+            return null;
+        }
     }
 
     public static function isDefault()
@@ -314,14 +345,29 @@ class Language extends Object
         return \Yii::$app->language == \app\services\Language::convertLanguageIdToAppLanguage(self::getDefaultId());
     }
 
+    /**
+     * Возврщает язык который на данный момент установлен у пользователя
+     * Алгоримт:
+     * Если клиент первый раз зашел? то будет расчитан наиболее оптимальный для него из его параметров COOKIE
+     * Иначе возвращается переменная сессии `$_SESSION['app.language']`
+     *
+     * @return int
+     */
     public static function getLanguageId()
     {
         $v = \Yii::$app->session->get('app.language', null);
-        if (is_null($v)) return self::getDefaultId();
+        if (is_null($v)) return self::getGoodLanguage();
 
         return $v;
     }
 
+    /**
+     * Возвращает язык принятый в системе по умолчанию то есть массово используемый в системе. Для него оптимизируется система
+     * Он устанавливается в параметрах приожения `\Yii::$app->params['languages']['defaultId']`
+     *
+     * @return mixed
+     * @throws \Exception
+     */
     public static function getDefaultId()
     {
         $v = ArrayHelper::getValue(\Yii::$app->params, 'languages.defaultId');
